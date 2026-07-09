@@ -34,7 +34,41 @@
       font-variation-settings: "width" 100;
     }
   </style>
-  <h1 style="margin: 1rem; color: var(--primary-dark);">Sumptureg</h1>
+  <script type="module">
+    import { SumpturegRouter } from "/components/sumptureg-router.js";
+    import { triggerSync } from "/objects/sync.js";
+
+    customElements.define("sumptureg-router", SumpturegRouter);
+
+    (async () => {
+      if ("serviceWorker" in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.register("/sw.js", {
+            scope: "/", type: "module",
+          });
+
+          if (registration.installing) {
+            console.log("Service worker installing");
+          } else if (registration.waiting) {
+            console.log("Service worker installed");
+          } else if (registration.active) {
+            console.log("Service worker active");
+          }
+        } catch (error) {
+          console.error(`Registration failed with ${error}`);
+        }
+      }
+    })();
+
+    if (window.Worker) {
+      const worker = new Worker("/worker.js", { type: "module" });
+      worker.postMessage({ type: "init" });
+    }
+
+    window.addEventListener("online", () => triggerSync());
+    triggerSync();
+  </script>
+  <sumptureg-router></sumptureg-router>
 </body>
 
 </html>
