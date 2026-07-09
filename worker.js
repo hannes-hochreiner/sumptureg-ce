@@ -4,6 +4,7 @@ let intervalId = null;
 
 onmessage = (event) => {
   if (event.data.type === "init") {
+    if (intervalId) return;
     intervalId = setInterval(() => {
       triggerSync();
     }, 1000 * 60);
