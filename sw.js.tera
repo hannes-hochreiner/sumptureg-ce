@@ -1,0 +1,62 @@
+const version = '{{ version }}';
+const projectArtifacts = [
+  {% for url in project_artifacts -%}
+    '{{url}}',
+  {% endfor -%}
+];
+const externalLibraries = [
+  'https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap',
+  'https://cdn.jsdelivr.net/npm/pouchdb/+esm',
+  'https://cdn.jsdelivr.net/npm/pouchdb-find/+esm',
+];
+
+self.addEventListener('install', function(event) {
+  event.waitUntil(
+    caches.open(version).then(function(cache) {
+      return cache.addAll([
+        ...projectArtifacts,
+        ...externalLibraries]);
+    }).then(function() {
+      return self.skipWaiting();
+    })
+  );
+});
+
+self.addEventListener('fetch', function(event) {
+  let url = new URL(event.request.url);
+
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      fetch(event.request)
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.open(version).then(function(cache) {
+      return cache.match(event.request).then(function(response) {
+        return response || fetch(event.request).then(function(response) {
+          cache.put(event.request, response.clone());
+          return response;
+        });
+      });
+    })
+  );
+});
+
+self.addEventListener('activate', function activator(event) {
+  event.waitUntil(
+    caches.keys().then(function(keys) {
+      return Promise.all(keys
+        .filter(function(key) {
+            return key.indexOf(version) !== 0;
+        })
+        .map(function(key) {
+            return caches.delete(key);
+        })
+      );
+    }).then(function() {
+      return self.clients.claim();
+    })
+  );
+});
