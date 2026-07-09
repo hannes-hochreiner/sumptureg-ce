@@ -21,6 +21,13 @@ export def stop [] {
 
 export def init_db [] {
   http put http://admin:password@localhost:5984/sumptureg ""
+  # The app has no login flow and repo.js syncs anonymously via /api, so the
+  # database's _security doc must be opened up for anonymous read/write.
+  # CouchDB's implicit default (when unset) is admin-only, which would make
+  # every sync request fail with 401.
+  http put -t application/json http://admin:password@localhost:5984/sumptureg/_security (
+    { members: { names: [], roles: [] }, admins: { names: [], roles: ["_admin"] } } | to json
+  )
 }
 
 export def seed_categories [] {
@@ -51,10 +58,10 @@ export def seed_categories [] {
   ]
 
   for category in $categories {
-    http put $"http://admin:password@localhost:5984/sumptureg/($category.id)" {
+    http put -t application/json $"http://admin:password@localhost:5984/sumptureg/($category.id)" ({
       type: "category",
       name: $category.name,
-    }
+    } | to json)
   }
 }
 

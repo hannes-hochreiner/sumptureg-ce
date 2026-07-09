@@ -26,3 +26,11 @@ services:
 networks:
   sumptureg:
     driver: bridge
+    ipam:
+      config:
+        # Pinned within 10.0.0.0/8 so it satisfies nginx.conf's default
+        # `allow 10.0.0.0/8` rule for /api. Docker's auto-assigned bridge
+        # subnets (typically 172.x) fall outside that range and would
+        # otherwise cause every sync request to be rejected with 403.
+        - subnet: 10.10.0.0/24
+          gateway: 10.10.0.1
