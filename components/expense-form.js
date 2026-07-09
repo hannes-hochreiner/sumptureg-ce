@@ -30,7 +30,7 @@ export class ExpenseForm extends HTMLElement {
       <p id="error" class="error" hidden></p>
       <p id="saved" class="saved" hidden>Saved!</p>
       <p id="notice" class="notice" hidden>Sync required to load categories.</p>
-      <form id="form">
+      <form id="form" novalidate>
         <label>Amount
           <input id="amount" type="number" step="0.01" min="0.01" placeholder="0.00" required />
         </label>
