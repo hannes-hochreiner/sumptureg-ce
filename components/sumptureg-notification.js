@@ -1,6 +1,7 @@
 export class SumpturegNotification extends HTMLElement {
   #notifications = [];
   #timeout = null;
+  #bc = null;
 
   constructor() {
     super();
@@ -76,13 +77,17 @@ export class SumpturegNotification extends HTMLElement {
     this.shadowRoot.querySelector("#button_close")
       .addEventListener("click", () => this.#showNext());
 
-    const bc = new BroadcastChannel("notification");
-    bc.onmessage = (event) => {
+    this.#bc = new BroadcastChannel("notification");
+    this.#bc.onmessage = (event) => {
       this.#notifications.push(event.data);
       if (this.shadowRoot.querySelector("#content").classList.contains("hidden")) {
         this.#showNext();
       }
     };
+  }
+
+  disconnectedCallback() {
+    this.#bc?.close();
   }
 
   #showNext() {

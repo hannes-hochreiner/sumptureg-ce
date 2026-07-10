@@ -80,6 +80,10 @@ export class SumpturegConfig extends HTMLElement {
     `;
   }
 
+  disconnectedCallback() {
+    this.#bc?.close();
+  }
+
   #renderSynchronization() {
     return /*html*/ `
       <header>Synchronization</header>
@@ -101,7 +105,12 @@ export class SumpturegConfig extends HTMLElement {
   async toggleNotifyOnAutoSync() {
     try {
       const repo = await new Repo();
-      const fresh = await repo.getConfig();
+      let fresh;
+      try {
+        fresh = await repo.getConfig();
+      } catch {
+        fresh = Config.default();
+      }
       fresh.notifyOnAutoSync = !fresh.notifyOnAutoSync;
       await repo.setConfig(fresh);
       this.#config = await repo.getConfig();
