@@ -2,10 +2,12 @@ import { SumpturegEntry } from "../pages/sumptureg-entry.js";
 import { SumpturegSummary } from "../pages/sumptureg-summary.js";
 import { SumpturegCategories } from "../pages/sumptureg-categories.js";
 import { SumpturegConflicts } from "../pages/sumptureg-conflicts.js";
+import { SumpturegConfig } from "../pages/sumptureg-config.js";
 
 export class SumpturegRouter extends HTMLElement {
   #slotContent = null;
   #routes = [
+    { route: /^\/config$/, class: SumpturegConfig },
     { route: /^\/summary$/, class: SumpturegSummary },
     { route: /^\/categories$/, class: SumpturegCategories },
     { route: /^\/conflicts$/, class: SumpturegConflicts },
