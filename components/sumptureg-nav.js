@@ -33,6 +33,7 @@ export class SumpturegNav extends HTMLElement {
       </style>
       <nav>
         <a href="/">Entry</a>
+        <a href="/expenses">Expenses</a>
         <a href="/summary">Summary</a>
         <a href="/categories">Categories</a>
         <a href="/conflicts">Conflicts<span id="badge"></span></a>
