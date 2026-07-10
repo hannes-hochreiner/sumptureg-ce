@@ -82,4 +82,20 @@ export class Repo {
       await this.#db.remove(docId, version._rev);
     }
   }
+
+  async getConfig() {
+    return await this.#db.get("config");
+  }
+
+  async setConfig(config) {
+    await this.#db.put(config);
+  }
+
+  async getInfo() {
+    return await this.#db.get("info");
+  }
+
+  async setInfo(info) {
+    await this.#db.put(info);
+  }
 }
