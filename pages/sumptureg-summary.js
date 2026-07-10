@@ -1,3 +1,4 @@
+import "../components/sumptureg-header.js";
 import "../components/sumptureg-nav.js";
 import "../components/summary-table.js";
 import { Repo } from "../repo.js";
@@ -21,6 +22,7 @@ export class SumpturegSummary extends HTMLElement {
         main { margin: 0 1rem; }
         p.empty { color: var(--secondary-dark); }
       </style>
+      <sumptureg-header></sumptureg-header>
       <sumptureg-nav></sumptureg-nav>
       <div class="month-nav">
         <button id="prev">◀</button>

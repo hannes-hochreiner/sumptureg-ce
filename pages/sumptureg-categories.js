@@ -1,3 +1,4 @@
+import "../components/sumptureg-header.js";
 import "../components/sumptureg-nav.js";
 import "../components/category-form.js";
 import "../components/category-list.js";
@@ -10,6 +11,7 @@ export class SumpturegCategories extends HTMLElement {
     const shadowRoot = this.attachShadow({ mode: "open" });
     shadowRoot.innerHTML = /*html*/ `
       <style>h1 { margin: 1rem; color: var(--secondary-dark); }</style>
+      <sumptureg-header></sumptureg-header>
       <sumptureg-nav></sumptureg-nav>
       <h1>Categories</h1>
       <category-form id="form"></category-form>

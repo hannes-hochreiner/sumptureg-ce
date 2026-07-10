@@ -1,3 +1,4 @@
+import "../components/sumptureg-header.js";
 import "../components/sumptureg-nav.js";
 import "../components/conflict-item.js";
 import { Repo } from "../repo.js";
@@ -12,6 +13,7 @@ export class SumpturegConflicts extends HTMLElement {
         h1 { margin: 1rem; color: var(--tertiary-dark); }
         p.empty { margin: 1rem; color: var(--secondary-dark); }
       </style>
+      <sumptureg-header></sumptureg-header>
       <sumptureg-nav></sumptureg-nav>
       <h1>Conflicts</h1>
       <div id="list"></div>
