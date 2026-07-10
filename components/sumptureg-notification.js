@@ -11,7 +11,7 @@ export class SumpturegNotification extends HTMLElement {
         #content {
           display: flex;
           flex-direction: column;
-          border: 1px solid;
+          border: 1px solid var(--secondary-dark);
           background-color: var(--secondary-light);
           color: var(--secondary-dark);
           border-radius: 15px;
@@ -93,8 +93,8 @@ export class SumpturegNotification extends HTMLElement {
     }
     if (this.#notifications.length > 0) {
       const notification = this.#notifications.shift();
-      this.shadowRoot.querySelector("#title").innerHTML = notification.title;
-      this.shadowRoot.querySelector("#message").innerHTML = notification.message;
+      this.shadowRoot.querySelector("#title").textContent = notification.title;
+      this.shadowRoot.querySelector("#message").textContent = notification.message;
       const content = this.shadowRoot.querySelector("#content");
       if (notification.type === "error") {
         content.classList.add("error");
