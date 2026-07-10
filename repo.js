@@ -31,6 +31,10 @@ export class Repo {
     return await this.#db.get(id);
   }
 
+  async deleteDoc(id, rev) {
+    await this.#db.remove(id, rev);
+  }
+
   async getAllCategories() {
     const { docs } = await this.#db.find({ selector: { type: "category" } });
     return docs;
