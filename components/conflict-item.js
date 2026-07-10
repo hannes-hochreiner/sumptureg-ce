@@ -6,7 +6,7 @@ function describeVersion(type, doc) {
     return "(deleted)";
   }
   if (type === "expense") {
-    return `${doc.amount} ${escapeHtml(doc.currency)} — ${escapeHtml(doc.date)} — ${escapeHtml(doc.category_id)}`;
+    return `${escapeHtml(String(doc.amount))} ${escapeHtml(doc.currency)} — ${escapeHtml(doc.date)} — ${escapeHtml(doc.category_id)}`;
   }
   return `"${escapeHtml(doc.name)}"`;
 }

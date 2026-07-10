@@ -1,11 +1,14 @@
 import { Expense } from "../objects/expense.js";
 import { validateAmount, validateCategorySelected } from "../objects/validation.js";
+import { escapeHtml } from "../objects/utils.js";
 import { Repo } from "../repo.js";
 import { triggerSync } from "../objects/sync.js";
 
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "JPY"];
 
 export class ExpenseForm extends HTMLElement {
+  #repo = null;
+
   constructor() {
     super();
 
@@ -54,12 +57,12 @@ export class ExpenseForm extends HTMLElement {
   }
 
   async connectedCallback() {
+    this.#repo = await new Repo();
     await this.#loadCategories();
   }
 
   async #loadCategories() {
-    const repo = await new Repo();
-    const categories = await repo.getAllCategories();
+    const categories = await this.#repo.getAllCategories();
     const select = this.shadowRoot.querySelector("#category");
     const notice = this.shadowRoot.querySelector("#notice");
 
@@ -73,7 +76,7 @@ export class ExpenseForm extends HTMLElement {
     const sorted = categories.slice().sort((a, b) => a.name.localeCompare(b.name));
     select.innerHTML = [
       '<option value="">— select —</option>',
-      ...sorted.map((category) => `<option value="${category._id}">${category.name}</option>`),
+      ...sorted.map((category) => `<option value="${escapeHtml(category._id)}">${escapeHtml(category.name)}</option>`),
     ].join("");
   }
 
@@ -109,8 +112,7 @@ export class ExpenseForm extends HTMLElement {
       category_id: categorySelect.value,
     };
 
-    const repo = await new Repo();
-    await repo.addDoc(expense);
+    await this.#repo.addDoc(expense);
     triggerSync();
 
     amountInput.value = "";
