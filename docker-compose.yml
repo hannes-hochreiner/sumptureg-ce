@@ -1,0 +1,36 @@
+services:
+  couchdb:
+    image: couchdb:3.4.1
+    container_name: sumptureg-couchdb
+    ports:
+      - "5984:5984"
+    environment:
+      COUCHDB_USER: "admin"
+      COUCHDB_PASSWORD: "password"
+    networks:
+      - sumptureg
+
+  server:
+    image: nginx:alpine
+    container_name: sumptureg-server
+    depends_on:
+      - couchdb
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./result/var/html:/usr/share/nginx/html:ro
+    networks:
+      - sumptureg
+
+networks:
+  sumptureg:
+    driver: bridge
+    ipam:
+      config:
+        # Pinned within 10.0.0.0/8 so it satisfies nginx.conf's default
+        # `allow 10.0.0.0/8` rule for /api. Docker's auto-assigned bridge
+        # subnets (typically 172.x) fall outside that range and would
+        # otherwise cause every sync request to be rejected with 403.
+        - subnet: 10.10.0.0/24
+          gateway: 10.10.0.1
