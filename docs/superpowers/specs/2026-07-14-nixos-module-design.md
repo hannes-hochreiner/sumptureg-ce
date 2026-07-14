@@ -44,7 +44,7 @@ nginx makes auth sub-requests to siap via a Unix domain socket — no TCP port i
 | `Cargo.toml` | Add `"unix"` to Rocket features: `features = ["json", "unix"]` |
 | `flake.nix` | `nixosModules.${system}.default` → `nixosModules.default` |
 | NixOS module | Add `package` option defaulting to `self.packages.${pkgs.system}.default` |
-| NixOS module | Add `DynamicUser = true` and `ROCKET_IP_HEADER=X-Real-IP` to systemd service |
+| NixOS module | Declare `hochreiner-siap` as a system user/group; add `ROCKET_IP_HEADER=X-Real-IP` to systemd service |
 | NixOS module | Change `address` default to `unix:/run/siap/siap.sock` |
 
 The `nixosModules.default` change makes the module system-agnostic: the module receives `pkgs` from the NixOS module system and uses `pkgs.system` to resolve the package, instead of closing over a hardcoded `system` string.
@@ -115,7 +115,7 @@ Both secrets are auto-generated at activation time and persist across reboots an
 | `/var/lib/hochreiner-couchdb/admin-password` | `600 root:root` | CouchDB setup service (runs as root) |
 | `/var/lib/hochreiner-couchdb/proxy-secret` | `640 root:hochreiner-siap` | Setup service (root) + siap daemon (`hochreiner-siap` user) |
 
-`hochreiner-siap` is a system user created by the siap NixOS module (via `DynamicUser = true` or a declared system user).
+`hochreiner-siap` is a declared system user and group created by the siap NixOS module (`users.users.hochreiner-siap`, `users.groups.hochreiner-siap`). A dynamic user cannot be used here because file ownership must be stable across reboots.
 
 ### Generation (activation script in `modules/couchdb.nix`)
 
