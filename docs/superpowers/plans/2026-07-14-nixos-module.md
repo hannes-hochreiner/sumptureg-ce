@@ -12,7 +12,7 @@
 
 - nixpkgs channel: `nixos-25.11` (already in `sumptureg-ce` flake)
 - siap package built from `github:hannes-hochreiner/static-api-authentication-proxy`
-- siap Unix socket path: `/run/siap/siap.sock`
+- siap binds to `127.0.0.1` (loopback) — Rocket 0.5.1 has no Unix socket support
 - Secrets directory: `/var/lib/hochreiner-couchdb/`
 - CouchDB binds to `127.0.0.1:5984` only (loopback)
 - System user for siap: `hochreiner-siap` (declared, not dynamic — file ownership must be stable)
@@ -152,9 +152,6 @@ systemd.services."hochreiner.static-ip-authentication-proxy" = {
     Type = "simple";
     User = "hochreiner-siap";
     Group = "hochreiner-siap";
-    RuntimeDirectory = "siap";
-    RuntimeDirectoryMode = "0750";
-    UMask = "0117";
     ExecStart = "${cfg.package}/bin/static-ip-authentication-proxy";
     Environment = [
       "RUST_LOG=${cfg.log_level}"
@@ -168,15 +165,17 @@ systemd.services."hochreiner.static-ip-authentication-proxy" = {
 };
 ```
 
+Note: `RuntimeDirectory`, `RuntimeDirectoryMode`, and `UMask` are NOT included — siap uses TCP loopback, not a Unix socket, so no socket file is created.
+
 - [ ] **Step 5: Change the `address` option default**
 
-Find the `address` option and change its default:
+Find the `address` option and change its default to loopback-only (Rocket 0.5.1 has no Unix socket support):
 
 ```nix
 address = mkOption {
   type = types.str;
-  default = "unix:/run/siap/siap.sock";
-  description = lib.mdDoc "Address to bind the service to; use unix:/path for a Unix socket";
+  default = "127.0.0.1";
+  description = lib.mdDoc "Address to bind the service to";
 };
 ```
 
@@ -211,7 +210,7 @@ Expected: build succeeds (this is the integration test — it proves the module 
 
 ```bash
 git add flake.nix
-git commit -m "feat: refactor nixos module — system-agnostic export, hochreiner-siap user, unix socket default"
+git commit -m "feat: refactor nixos module — system-agnostic export, hochreiner-siap user, loopback default"
 ```
 
 ---
@@ -605,9 +604,6 @@ in {
       };
     };
 
-    # Allow nginx to connect to the siap Unix socket
-    users.users.nginx.extraGroups = [ "hochreiner-siap" ];
-
     # nginx virtual host
     services.nginx = {
       enable = true;
@@ -619,7 +615,7 @@ in {
         extraConfig = ''
           location = /auth {
             internal;
-            proxy_pass http://unix:/run/siap/siap.sock:/auth;
+            proxy_pass http://127.0.0.1:${toString config.hochreiner.services.static-ip-authentication-proxy.port}/auth;
             proxy_pass_request_body off;
             proxy_set_header Content-Length  "";
             proxy_set_header X-Original-Host $host;
@@ -741,11 +737,11 @@ git commit -m "feat: implement sumptureg nixos module — wires nginx, siap, and
 | CouchDB proxy auth configuration (setup script) | Task 4 |
 | `hochreiner.services.sumptureg` options | Task 5 |
 | nginx virtual host with TLS | Task 5 |
-| nginx `/auth` internal location → siap socket | Task 5 |
+| nginx `/auth` internal location → siap loopback TCP | Task 5 |
 | nginx `/api` → CouchDB with auth headers | Task 5 |
 | nginx `/api/_session` → CouchDB `/_session` | Task 5 |
 | siap host entry wired from sumptureg options | Task 5 |
-| nginx user added to `hochreiner-siap` group | Task 5 |
+| nginx user added to `hochreiner-siap` group | N/A — not needed with TCP loopback |
 | memberRoles auto-derived from ipMapping | Task 5 |
 | `admin-password` 600 root:root | Task 4 |
 | `proxy-secret` 640 root:hochreiner-siap | Task 4 |
