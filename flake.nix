@@ -45,5 +45,30 @@
       inherit self;
       siap = static-ip-authentication-proxy;
     };
+
+    nixosConfigurations.sumptureg-test = nixpkgs.lib.nixosSystem {
+      inherit system;
+      modules = [
+        self.nixosModules.default
+        ({ pkgs, ... }: {
+          boot.isContainer = true;
+          networking.hostName = "sumptureg-test";
+          networking.firewall.allowedTCPPorts = [ 443 ];
+
+          hochreiner.services.sumptureg = {
+            enable = true;
+            domain = "sumptureg.test";
+            certificateFile    = "/etc/ssl/test-cert.pem";
+            certificateKeyFile = "/etc/ssl/test-key.pem";
+            ipMapping."127.0.0.1" = {
+              user  = "testuser";
+              roles = [ "sumptureg-user" ];
+            };
+          };
+
+          system.stateVersion = "25.11";
+        })
+      ];
+    };
   };
 }

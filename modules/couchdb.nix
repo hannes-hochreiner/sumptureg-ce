@@ -2,18 +2,116 @@
 with lib;
 let
   cfg = config.hochreiner.services.couchdb;
+
+  setupScript = pkgs.writeShellScript "hochreiner-couchdb-setup" ''
+    set -euo pipefail
+
+    until ${pkgs.curl}/bin/curl -sf http://127.0.0.1:5984/ > /dev/null; do
+      sleep 1
+    done
+
+    PASS=$(cat /var/lib/hochreiner-couchdb/admin-password)
+    SECRET=$(cat /var/lib/hochreiner-couchdb/proxy-secret)
+
+    # First-boot: create admin if CouchDB is still in Admin Party mode
+    if ${pkgs.curl}/bin/curl -sf http://127.0.0.1:5984/_all_dbs > /dev/null 2>&1; then
+      ${pkgs.curl}/bin/curl -sf -X PUT \
+        http://127.0.0.1:5984/_node/_local/_config/admins/admin \
+        -d "\"$PASS\""
+    fi
+
+    # Configure proxy auth (idempotent)
+    ${pkgs.curl}/bin/curl -sf -X PUT \
+      "http://admin:$PASS@127.0.0.1:5984/_node/_local/_config/chttpd_auth/proxy_use_secret" \
+      -d '"true"'
+    ${pkgs.curl}/bin/curl -sf -X PUT \
+      "http://admin:$PASS@127.0.0.1:5984/_node/_local/_config/chttpd_auth/secret" \
+      -d "\"$SECRET\""
+    ${pkgs.curl}/bin/curl -sf -X PUT \
+      "http://admin:$PASS@127.0.0.1:5984/_node/_local/_config/chttpd_auth/timeout" \
+      -d '"2592000"'
+
+    ${concatStringsSep "\n" (mapAttrsToList (name: dbcfg: ''
+      ${pkgs.curl}/bin/curl -sf -X PUT \
+        "http://admin:$PASS@127.0.0.1:5984/${name}" || true
+      ${pkgs.curl}/bin/curl -sf -X PUT \
+        "http://admin:$PASS@127.0.0.1:5984/${name}/_security" \
+        -H "Content-Type: application/json" \
+        -d '${builtins.toJSON {
+          admins  = { names = []; roles = dbcfg.adminRoles; };
+          members = { names = []; roles = dbcfg.memberRoles; };
+        }}'
+    '') cfg.databases)}
+  '';
 in {
   options.hochreiner.services.couchdb = {
     enable = mkEnableOption "hochreiner CouchDB setup";
+
     databases = mkOption {
       type = types.attrsOf (types.submodule {
         options = {
-          memberRoles = mkOption { type = types.listOf types.str; default = []; };
-          adminRoles  = mkOption { type = types.listOf types.str; default = []; };
+          memberRoles = mkOption {
+            type = types.listOf types.str;
+            default = [];
+            description = lib.mdDoc "Roles whose members may read/write this database";
+          };
+          adminRoles = mkOption {
+            type = types.listOf types.str;
+            default = [];
+            description = lib.mdDoc "Roles with database-admin access";
+          };
         };
       });
       default = {};
+      description = lib.mdDoc "Databases to create. Key is the CouchDB database name.";
     };
   };
-  config = mkIf cfg.enable {};
+
+  config = mkIf cfg.enable {
+    services.couchdb = {
+      enable = true;
+      bindAddress = "127.0.0.1";
+      extraConfig = ''
+        [couchdb]
+        single_node = true
+      '';
+    };
+
+    system.activationScripts.hochreiner-couchdb-secrets = {
+      deps = [ "users" "groups" ];
+      text = ''
+        mkdir -p /var/lib/hochreiner-couchdb
+
+        if [ ! -f /var/lib/hochreiner-couchdb/admin-password ]; then
+          ${pkgs.coreutils}/bin/head -c 32 /dev/urandom \
+            | ${pkgs.coreutils}/bin/base64 -w0 \
+            > /var/lib/hochreiner-couchdb/admin-password
+          chmod 600 /var/lib/hochreiner-couchdb/admin-password
+          chown root:root /var/lib/hochreiner-couchdb/admin-password
+        fi
+
+        if [ ! -f /var/lib/hochreiner-couchdb/proxy-secret ]; then
+          ${pkgs.coreutils}/bin/head -c 32 /dev/urandom \
+            | ${pkgs.coreutils}/bin/base64 -w0 \
+            > /var/lib/hochreiner-couchdb/proxy-secret
+          chmod 640 /var/lib/hochreiner-couchdb/proxy-secret
+          chown root:hochreiner-siap /var/lib/hochreiner-couchdb/proxy-secret
+        fi
+      '';
+    };
+
+    systemd.services.hochreiner-couchdb-setup = {
+      description = "hochreiner CouchDB initialisation";
+      wantedBy = [ "multi-user.target" ];
+      after    = [ "couchdb.service" ];
+      requires = [ "couchdb.service" ];
+      before   = [ "nginx.service"
+                   "hochreiner.static-ip-authentication-proxy.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = setupScript;
+      };
+    };
+  };
 }
