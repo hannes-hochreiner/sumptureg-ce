@@ -77,11 +77,11 @@
         "nixpkgs-unstable": "nixpkgs-unstable"
       },
       "locked": {
-        "lastModified": 1783962231,
-        "narHash": "sha256-bgRGls41PJADaKrxicYW+Xp4qFJ8IhewzhXRtsDAExA=",
+        "lastModified": 1784178934,
+        "narHash": "sha256-Co3q4/qjGKuudYrzb0eEl4YQOpBdZWZtT5ZsmJcKwsM=",
         "owner": "hannes-hochreiner",
         "repo": "static-api-authentication-proxy",
-        "rev": "ba08a07fe6e0c9162e47f5aac4d5bb2ee0140d50",
+        "rev": "8d15a01d50c2b1fd24211e915c44aea262cc5997",
         "type": "github"
       },
       "original": {
