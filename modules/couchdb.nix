@@ -21,21 +21,21 @@ let
     fi
 
     # Configure proxy auth (idempotent)
-    ${pkgs.curl}/bin/curl -sf -X PUT \
-      "http://admin:$PASS@127.0.0.1:5984/_node/_local/_config/chttpd_auth/proxy_use_secret" \
+    ${pkgs.curl}/bin/curl -sf -u "admin:$PASS" -X PUT \
+      "http://127.0.0.1:5984/_node/_local/_config/chttpd_auth/proxy_use_secret" \
       -d '"true"'
-    ${pkgs.curl}/bin/curl -sf -X PUT \
-      "http://admin:$PASS@127.0.0.1:5984/_node/_local/_config/chttpd_auth/secret" \
+    ${pkgs.curl}/bin/curl -sf -u "admin:$PASS" -X PUT \
+      "http://127.0.0.1:5984/_node/_local/_config/chttpd_auth/secret" \
       -d "\"$SECRET\""
-    ${pkgs.curl}/bin/curl -sf -X PUT \
-      "http://admin:$PASS@127.0.0.1:5984/_node/_local/_config/chttpd_auth/timeout" \
+    ${pkgs.curl}/bin/curl -sf -u "admin:$PASS" -X PUT \
+      "http://127.0.0.1:5984/_node/_local/_config/chttpd_auth/timeout" \
       -d '"2592000"'
 
     ${concatStringsSep "\n" (mapAttrsToList (name: dbcfg: ''
-      ${pkgs.curl}/bin/curl -sf -X PUT \
-        "http://admin:$PASS@127.0.0.1:5984/${name}" || true
-      ${pkgs.curl}/bin/curl -sf -X PUT \
-        "http://admin:$PASS@127.0.0.1:5984/${name}/_security" \
+      ${pkgs.curl}/bin/curl -sf -u "admin:$PASS" -X PUT \
+        "http://127.0.0.1:5984/${name}" || true
+      ${pkgs.curl}/bin/curl -sf -u "admin:$PASS" -X PUT \
+        "http://127.0.0.1:5984/${name}/_security" \
         -H "Content-Type: application/json" \
         -d '${builtins.toJSON {
           admins  = { names = []; roles = dbcfg.adminRoles; };
@@ -111,6 +111,16 @@ in {
         RemainAfterExit = true;
         ExecStart = setupScript;
       };
+    };
+
+    systemd.services.nginx = {
+      after = [ "hochreiner-couchdb-setup.service" ];
+      wants = [ "hochreiner-couchdb-setup.service" ];
+    };
+
+    systemd.services."hochreiner.static-ip-authentication-proxy" = {
+      after = [ "hochreiner-couchdb-setup.service" ];
+      wants = [ "hochreiner-couchdb-setup.service" ];
     };
   };
 }
