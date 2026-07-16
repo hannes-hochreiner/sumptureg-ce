@@ -4,9 +4,10 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-25.11";
     nixpkgs-us.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    static-ip-authentication-proxy.url = "github:hannes-hochreiner/static-api-authentication-proxy";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-us }:
+  outputs = { self, nixpkgs, nixpkgs-us, static-ip-authentication-proxy }:
   let
     system = "x86_64-linux";
     pkgs = import nixpkgs {
@@ -38,6 +39,11 @@
         nushell
         tera-cli
       ];
+    };
+
+    nixosModules.default = import ./modules/sumptureg.nix {
+      inherit self;
+      siap = static-ip-authentication-proxy;
     };
   };
 }

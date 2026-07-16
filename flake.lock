@@ -16,6 +16,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-unstable": {
+      "locked": {
+        "lastModified": 1760524057,
+        "narHash": "sha256-EVAqOteLBFmd7pKkb0+FIUyzTF61VKi7YmvP1tw4nEw=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "544961dfcce86422ba200ed9a0b00dd4b1486ec5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixpkgs-us": {
       "locked": {
         "lastModified": 1783224372,
@@ -32,10 +48,46 @@
         "type": "github"
       }
     },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1760580664,
+        "narHash": "sha256-/YdfibIrnqXAL8p5kqCU345mzpHoOtuVIkMiI2pF4Dc=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "98ff3f9af2684f6136c24beef08f5e2033fc5389",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-25.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
-        "nixpkgs-us": "nixpkgs-us"
+        "nixpkgs-us": "nixpkgs-us",
+        "static-ip-authentication-proxy": "static-ip-authentication-proxy"
+      }
+    },
+    "static-ip-authentication-proxy": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_2",
+        "nixpkgs-unstable": "nixpkgs-unstable"
+      },
+      "locked": {
+        "lastModified": 1783962231,
+        "narHash": "sha256-bgRGls41PJADaKrxicYW+Xp4qFJ8IhewzhXRtsDAExA=",
+        "owner": "hannes-hochreiner",
+        "repo": "static-api-authentication-proxy",
+        "rev": "ba08a07fe6e0c9162e47f5aac4d5bb2ee0140d50",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hannes-hochreiner",
+        "repo": "static-api-authentication-proxy",
+        "type": "github"
       }
     }
   },
