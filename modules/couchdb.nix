@@ -71,10 +71,9 @@ in {
     services.couchdb = {
       enable = true;
       bindAddress = "127.0.0.1";
-      extraConfig = ''
-        [couchdb]
-        single_node = true
-      '';
+      extraConfig = {
+        couchdb.single_node = true;
+      };
     };
 
     system.activationScripts.hochreiner-couchdb-secrets = {
