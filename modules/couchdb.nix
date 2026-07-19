@@ -44,6 +44,8 @@ let
     '') cfg.databases)}
   '';
 in {
+  key = "hochreiner-couchdb";
+
   options.hochreiner.services.couchdb = {
     enable = mkEnableOption "hochreiner CouchDB setup";
 
