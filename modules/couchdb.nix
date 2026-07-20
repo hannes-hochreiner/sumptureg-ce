@@ -24,7 +24,7 @@ let
       "http://127.0.0.1:5984/_node/_local/_config/chttpd_auth/timeout" \
       -d '"2592000"'
     ${pkgs.curl}/bin/curl -sf -u "admin:$PASS" -X PUT \
-      "http://127.0.0.1:5984/_node/_local/_config/chttpd_auth/authentication_handlers" \
+      "http://127.0.0.1:5984/_node/_local/_config/chttpd/authentication_handlers" \
       -d '"{chttpd_auth, proxy_authentication_handler}, {chttpd_auth, cookie_authentication_handler}, {chttpd_auth, default_authentication_handler}"'
 
     ${concatStringsSep "\n" (mapAttrsToList (name: dbcfg: ''
