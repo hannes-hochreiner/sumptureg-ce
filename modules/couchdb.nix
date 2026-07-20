@@ -13,13 +13,6 @@ let
     PASS=$(cat /var/lib/hochreiner-couchdb/admin-password)
     SECRET=$(cat /var/lib/hochreiner-couchdb/proxy-secret)
 
-    # First-boot: create admin if CouchDB is still in Admin Party mode
-    if ${pkgs.curl}/bin/curl -sf http://127.0.0.1:5984/_all_dbs > /dev/null 2>&1; then
-      ${pkgs.curl}/bin/curl -sf -X PUT \
-        http://127.0.0.1:5984/_node/_local/_config/admins/admin \
-        -d "\"$PASS\""
-    fi
-
     # Configure proxy auth (idempotent)
     ${pkgs.curl}/bin/curl -sf -u "admin:$PASS" -X PUT \
       "http://127.0.0.1:5984/_node/_local/_config/chttpd_auth/proxy_use_secret" \
@@ -97,6 +90,18 @@ in {
             > /var/lib/hochreiner-couchdb/proxy-secret
           chmod 640 /var/lib/hochreiner-couchdb/proxy-secret
           chown root:hochreiner-siap /var/lib/hochreiner-couchdb/proxy-secret
+        fi
+
+        # CouchDB refuses to start at all without a preconfigured admin
+        # account ("Admin Party" boot is no longer supported), so the
+        # account must exist in local.ini before couchdb.service starts.
+        mkdir -p /var/lib/couchdb
+        chown couchdb:couchdb /var/lib/couchdb
+        touch /var/lib/couchdb/local.ini
+        chown couchdb:couchdb /var/lib/couchdb/local.ini
+        if ! ${pkgs.gnugrep}/bin/grep -q '^\[admins\]' /var/lib/couchdb/local.ini; then
+          printf '[admins]\nadmin = %s\n' "$(cat /var/lib/hochreiner-couchdb/admin-password)" \
+            >> /var/lib/couchdb/local.ini
         fi
       '';
     };
