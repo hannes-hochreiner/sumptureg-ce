@@ -4,6 +4,45 @@ with lib;
 let
   cfg = config.hochreiner.services.sumptureg;
   sumptureg-package = self.packages.${pkgs.system}.default;
+
+  defaultCategories = [
+    { id = "c0000000-0000-0000-0000-000000000001"; name = "Books"; }
+    { id = "c0000000-0000-0000-0000-000000000002"; name = "Cafeteria"; }
+    { id = "c0000000-0000-0000-0000-000000000003"; name = "Cereal"; }
+    { id = "c0000000-0000-0000-0000-000000000004"; name = "Cleaning supplies"; }
+    { id = "c0000000-0000-0000-0000-000000000005"; name = "Clothing"; }
+    { id = "c0000000-0000-0000-0000-000000000006"; name = "Courses"; }
+    { id = "c0000000-0000-0000-0000-000000000007"; name = "Dry cleaning"; }
+    { id = "c0000000-0000-0000-0000-000000000008"; name = "Eating out"; }
+    { id = "c0000000-0000-0000-0000-000000000009"; name = "Entertainment"; }
+    { id = "c0000000-0000-0000-0000-00000000000a"; name = "Fruit"; }
+    { id = "c0000000-0000-0000-0000-00000000000b"; name = "Gifts"; }
+    { id = "c0000000-0000-0000-0000-00000000000c"; name = "Health"; }
+    { id = "c0000000-0000-0000-0000-00000000000d"; name = "Home improvement"; }
+    { id = "c0000000-0000-0000-0000-00000000000e"; name = "Meat"; }
+    { id = "c0000000-0000-0000-0000-00000000000f"; name = "Personal care"; }
+    { id = "c0000000-0000-0000-0000-000000000010"; name = "Postage"; }
+    { id = "c0000000-0000-0000-0000-000000000011"; name = "Restaurants"; }
+    { id = "c0000000-0000-0000-0000-000000000012"; name = "Sports"; }
+    { id = "c0000000-0000-0000-0000-000000000013"; name = "Stationary"; }
+    { id = "c0000000-0000-0000-0000-000000000014"; name = "Transport"; }
+    { id = "c0000000-0000-0000-0000-000000000015"; name = "Vegetables"; }
+    { id = "c0000000-0000-0000-0000-000000000016"; name = "Yoghurt"; }
+  ];
+
+  seedCategoriesScript = pkgs.writeShellScript "hochreiner-sumptureg-seed-categories" ''
+    set -euo pipefail
+
+    PASS=$(cat /var/lib/hochreiner-couchdb/admin-password)
+
+    ${concatStringsSep "\n" (map (c: ''
+      ${pkgs.curl}/bin/curl -sf -u "admin:$PASS" -X PUT \
+        "http://127.0.0.1:5984/sumptureg/${c.id}" \
+        -H "Content-Type: application/json" \
+        -d '${builtins.toJSON { type = "category"; name = c.name; }}' \
+        >/dev/null || true
+    '') defaultCategories)}
+  '';
 in {
   imports = [
     ./couchdb.nix
@@ -49,6 +88,19 @@ in {
           unique (flatten (mapAttrsToList (_: u: u.roles) cfg.ipMapping))
         );
         adminRoles = mkDefault [];
+      };
+    };
+
+    # Seed the default category list into a freshly created database
+    systemd.services.hochreiner-sumptureg-seed-categories = {
+      description = "seed default sumptureg categories";
+      wantedBy = [ "multi-user.target" ];
+      after    = [ "hochreiner-couchdb-setup.service" ];
+      requires = [ "hochreiner-couchdb-setup.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = seedCategoriesScript;
       };
     };
 
